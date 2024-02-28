@@ -43,7 +43,7 @@ class ClientV2:
         self.__root = Root.get_current_root(self.__api)
         doc_id = utils.generate_doc_id()
 
-        metadata = models.Metadata.generate(
+        metadata = models.MetadataV2.generate(
             folder_name, models.DocumentType.FolderType, parent)
         content = models.Content.generate()
 
@@ -61,7 +61,7 @@ class ClientV2:
 
         doc_id = utils.generate_doc_id()
 
-        metadata = models.Metadata.generate(
+        metadata = models.MetadataV2.generate(
             name, models.DocumentType.DocumentType, parent)
         content = models.Content.generate()
         pdf = models.PDF.generate(file_path)
@@ -77,7 +77,7 @@ class ClientV2:
         self.__root.commit_root()
         self.__root.complete_sync()
 
-    def get_document(self, doc_id: str) -> T.Optional[models.Metadata]:
+    def get_document(self, doc_id: str) -> T.Optional[models.MetadataV2]:
         return self.__root.get_metadata_for_file_uuid(doc_id)
 
     def move_file_to_trash(self, doc_id: str) -> None:
@@ -107,7 +107,7 @@ class ClientV2:
             src_doc_id, metadata, parent_locator=link_file.locator)
 
         new_link_file = self.__root.__upload_link_file([metadata_link_entry] + [
-            entry for entry in link_file.entries if entry.entry_type != models.Metadata
+            entry for entry in link_file.entries if entry.entry_type != models.MetadataV2
         ])
 
         self.__root.remove_entry(src_doc_id)
@@ -196,19 +196,19 @@ class Root:
         self.__api.put(link_file.locator.id, data)
         return link_file
 
-    def get_metadata_for_file_uuid(self, file_uuid: str) -> T.Optional[models.Metadata]:
+    def get_metadata_for_file_uuid(self, file_uuid: str) -> T.Optional[models.MetadataV2]:
         link_file = self.get_link_file_for_file_uuid(file_uuid)
         if link_file is None:
             return None
 
         metadata = None
         for entry in link_file.entries:
-            if entry.entry_type == models.Metadata:
+            if entry.entry_type == models.MetadataV2:
                 metadata = self.get_link_entry_file_data(entry)
                 break
 
         if metadata is not None:
-            assert isinstance(metadata, models.Metadata)
+            assert isinstance(metadata, models.MetadataV2)
 
         return metadata
 

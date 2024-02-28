@@ -138,6 +138,7 @@ class Metadata(CloudFile):
     def size(self) -> int:
         return len(self.to_data())
 
+
     @classmethod
     def generate(cls, name: str, doc_type: DocumentType, parent: T.Optional[str] = None) -> 'Metadata':
         return cls(
@@ -159,6 +160,73 @@ class Metadata(CloudFile):
         result = json.loads(data.decode())
         result['type'] = DocumentType[result['type']]
         return Metadata(
+            **result
+        )
+
+@dataclass
+class MetadataV2(CloudFile):
+    file_ending = ".metadata"
+
+    deleted: bool
+    createdTime: int
+    lastModified: int
+    lastOpened: int
+    lastOpenedPage: int
+    metadatamodified: bool
+    modified: bool
+    parent: str
+    pinned: bool
+    synced: bool
+    type: DocumentType
+    version: int
+    visibleName: str
+
+    def to_data(self) -> bytes:
+        data = {
+            "createdTime": self.createdTime,
+            "deleted": self.deleted,
+            "lastModified": self.lastModified,
+            "metadatamodified": self.metadatamodified,
+            "modified": self.modified,
+            "parent": self.parent,
+            "pinned": self.pinned,
+            "synced": self.synced,
+            "type": self.type.value,
+            "version": self.version,
+            "visibleName": self.visibleName
+        }
+
+        if self.type == DocumentType.DocumentType:
+            data["lastOpenedPage"] = self.lastOpenedPage
+
+        return json.dumps(data).encode()
+
+    def size(self) -> int:
+        return len(self.to_data())
+
+    @classmethod
+    def generate(cls, name: str, doc_type: DocumentType, parent: T.Optional[str] = None) -> 'MetadataV2':
+        return cls(
+            deleted=False,
+            createdTime=int(datetime.datetime.now().timestamp()),
+            lastModified=int(datetime.datetime.now().timestamp()),
+            lastOpened=0,
+            lastOpenedPage=0,
+            metadatamodified=False,
+            modified=False,
+            parent=parent or "",
+            pinned=False,
+            synced=False,
+            type=doc_type,
+            version=0,
+            visibleName=name
+        )
+
+    @classmethod
+    def from_data(cls, data: bytes) -> 'MetadataV2':
+        result = json.loads(data.decode())
+        result['type'] = DocumentType[result['type']]
+        return MetadataV2(
             **result
         )
 
